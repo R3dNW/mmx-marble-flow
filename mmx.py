@@ -7,7 +7,7 @@ from song import MMXSong
 from utils import *
 
 # How many marbles are in the pipe from the divider to gate?
-MAX_MARBLES_PER_CHANNEL: int = 48
+MAX_MARBLES_PER_CHANNEL: int = 40
 
 # The probability that a marble going past an empty channel in the divider will fall in
 # This is probably random depending the marble height of that specific channel or neighbouring channels, 
@@ -26,10 +26,10 @@ CONVEYOR_NUM_CHANNELS = 8
 # Number of beats between releases of marbles onto the divider
 CONVEYOR_BEATS_PER_RELEASE = 1
 # The probability that a channel of the conveyor will actually accept a marble if one is available
-CONVEYOR_CHANNEL_ACCEPT_PROB = 0.96
+CONVEYOR_CHANNEL_ACCEPT_PROB = 0.95
 # Where do the first and last marble lanes enter the divider?
-CONVEYOR_DIVIDER_ENTRY_START = 4
-CONVEYOR_DIVIDER_ENTRY_END = NUM_CHANNELS - 10
+CONVEYOR_DIVIDER_ENTRY_START = 6
+CONVEYOR_DIVIDER_ENTRY_END = NUM_CHANNELS - 6
 # How many marbles can be waiting for the conveyor?
 CONVEYOR_RESERVOIR_CAPACITY = 80
 # Initial marbles will end up just getting dumped into the fishstair pool so this is a bit redundant
@@ -49,6 +49,11 @@ FISHSTAIR_RESERVOIR_INITIAL = 4*100
 
 # How many marbles to drop before we give up trying to break the MMX?
 LONG_RUN_MARBLE_GOAL = 1_000_000
+
+# Try flipping the divider direction to see if it improves things
+# This seems to make things worse if anything as it means that the bass is only fed by 
+# the two marbles per beat of the fishstair, and nothing else.
+REVERSE_DIVIDER = False
 
 
 # Compute conveyor belt entry points assuming uniform spread
@@ -79,12 +84,19 @@ class MMX:
         self.song_i = 0
 
     def divide_marble(self, start: int):
-        for c in range(start, NUM_CHANNELS):
+        def channel_step(c):
             if self.channels[c].count >= self.channels[c].max_count:
-                continue
+                return False
             if bernoulli(self.channels[c].marble_accept_p):
                 self.channels[c].count += 1
-                return
+                return True
+
+        if not REVERSE_DIVIDER:
+            for c in range(start, NUM_CHANNELS):
+                if channel_step(c): return
+        else:
+            for c in range(NUM_CHANNELS - start - 1, -1, -1):
+                if channel_step(c): return
         self.recycle_queue[-1] += 1
 
     def simul_step(self):
