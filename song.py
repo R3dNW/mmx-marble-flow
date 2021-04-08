@@ -71,7 +71,7 @@ NUM_MUTE_GROUPS = len(MUTE_GROUPS)
 # A custom setup that works slightly better
 STANDARD_MUTE_GROUP_LIST = [    
     # This is important, the machine will have to be rotated between songs so it gets a chance to reset
-    (0b000000, 96, "Load song"),
+    (0b000000, 64, "Load song"),
     
     (0b000000, 32, "Wind Up"),
 
@@ -83,6 +83,8 @@ STANDARD_MUTE_GROUP_LIST = [
     (0b000101, 64, "Bass & Snare & Kick"),
     (0b111111, 64, "Full MMX"),
     (0b111110, 64, "Drop Bass"),
+
+    (0b000000, 32, "Wind Down"),
 ]
 
 
