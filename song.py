@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from utils import *
 from settings import *
 import json
+from typing import List, Dict, Tuple
 
 
 def mute_mask_repr(mask):
@@ -20,8 +21,8 @@ def mute_mask_repr(mask):
     return "_".join(reversed(reprs))
 
 
-def blank_wheel(num_channels: int, num_beats: int) -> list[list[bool]]:
-    song: list[list[int]] = [[0]*num_beats]*num_channels
+def blank_wheel(num_channels: int, num_beats: int) -> List[List[int]]:
+    song: List[List[int]] = [[0]*num_beats]*num_channels
     song = list(map(list, song))  # Make all the lists truly independent
     return song
 
@@ -29,16 +30,16 @@ def blank_wheel(num_channels: int, num_beats: int) -> list[list[bool]]:
 def get_random_note_counts(num_cs: int, npb: float, ratio: float):
     notes_per_cycle = npb * BEATS_PER_WHEEL
 
-    c_weights: list[float] = [
+    c_weights: List[float] = [
         randf(1, ratio) for c in range(num_cs)]
     t_weight: float = sum(c_weights)
-    c_counts: list[int] = [math.floor(
+    c_counts: List[int] = [math.floor(
         (weight/t_weight)*notes_per_cycle) for weight in c_weights]
 
     return c_counts
 
 
-def make_highres_wheel_from_counts(c_counts: list[int]):
+def make_highres_wheel_from_counts(c_counts: List[int]):
     wheel = blank_wheel(len(c_counts), BEATS_PER_WHEEL*RANDOM_SONG_WRITING_RESOLUTION)
     for c in range(len(c_counts)):
         # A probably very slow way of finding places for new notes:
@@ -66,7 +67,7 @@ def wheel_to_text(wheel):
     for c_notes in wheel:
         yield "".join([str(notes) if notes > 0 else "-" for notes in c_notes])
 
-def wheel_from_text(wheel_text: list[str], num_channels=NUM_CHANNELS, num_beats=BEATS_PER_WHEEL):
+def wheel_from_text(wheel_text: List[str], num_channels=NUM_CHANNELS, num_beats=BEATS_PER_WHEEL):
     wheel = blank_wheel(num_channels, num_beats)
     for i, line in enumerate(wheel_text):
         for j, char in enumerate(line):
@@ -76,9 +77,9 @@ def wheel_from_text(wheel_text: list[str], num_channels=NUM_CHANNELS, num_beats=
 
 class MMXSong:
     def __init__(self, wheel, mute_instructions):
-        self.wheel: list[list[int]] = wheel
-        self.mute_instructions: list[SongMuteInstruction] = mute_instructions
-        self.mute_masks: list[tuple[int, int, str]] = []
+        self.wheel: List[List[int]] = wheel
+        self.mute_instructions: List[SongMuteInstruction] = mute_instructions
+        self.mute_masks: List[Tuple[int, int, str]] = []
 
         beat_count = 0
         for i, mute_instruction in enumerate(self.mute_instructions):
@@ -105,7 +106,7 @@ class MMXSong:
 
         for x, (mute_mask, start_beat, length, *_) in enumerate(self.mute_masks):
             if start_beat <= i < start_beat + length:
-                return not not (mute_mask & (1 << channel))
+                return not not (mute_mask & (1 << (NUM_CHANNELS - 1 - channel)))
 
 
     def notes_on_beat(self, i):

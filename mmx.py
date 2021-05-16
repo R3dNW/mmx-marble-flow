@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 import random
 import math
+from typing import List, Tuple, Dict
 
 from settings import *
 from song import MMXSong
@@ -19,12 +20,32 @@ class Channel:
     max_count: int = MAX_MARBLES_PER_CHANNEL
 
 
+# 'Circular Queue'-like object representing the marbles on their journey to the end of the Marble Transport
+class TransportQueue:
+    def __init__(self, length):
+        self.__length = length
+        self.__head = 0
+        self.__data = [0] * self.__length
+
+    def pop(self):
+        val = self.__data[self.__head]
+        self.__data[self.__head] = 0
+        self.__head = (self.__head + 1) % self.__length
+        return val
+
+    def add_to_tail(self, count):
+        self.__data[(self.__head - 1) % self.__length] += count
+    
+    def __iter__(self):
+        return iter(self.__data[self.__head:] + self.__data[:self.__head])
+
+
 # Marble return or recycle (i.e. fishstair or conveyor)
 class MarbleTransport:
     def __init__(self, t_settings: MarbleTransportSettings):
         self.settings: MarbleTransportSettings = t_settings
         self.reservoir_waiting: int = self.settings.reservoir_initial
-        self.queue: list[int] = [0] * self.settings.beats_to_transport
+        self.queue: TransportQueue = TransportQueue(self.settings.beats_to_transport)
 
         self.divider_entry_points = [
             int(self.settings.divider_entry_start +
@@ -33,8 +54,7 @@ class MarbleTransport:
         ]
 
     def simul_step(self, song_i):
-        self.reservoir_waiting += self.queue[0]
-        self.queue = self.queue[1:] + [0]
+        self.reservoir_waiting += self.queue.pop()
 
         if (song_i % self.settings.beats_per_release) == 0:
             for c in range(self.settings.num_channels):
@@ -46,7 +66,7 @@ class MarbleTransport:
                     yield self.divider_entry_points[c]
 
     def add_marbles(self, n):
-        self.queue[-1] += n
+        self.queue.add_to_tail(n)
 
     @property
     def overflowed(self) -> bool:
@@ -61,7 +81,7 @@ class MarbleTransport:
 # The actual MMX
 class MMX:
     def __init__(self, song):
-        self.channels: list[Channel] = [Channel(i, randf(
+        self.channels: List[Channel] = [Channel(i, randf(
             CHANNEL_ACCEPT_PROB_MIN, CHANNEL_ACCEPT_PROB_MAX)) for i in range(NUM_CHANNELS)]
         
         self.return_transport = MarbleTransport(MARBLE_RETURN_SETTINGS)
@@ -71,13 +91,6 @@ class MMX:
         self.song_i = 0
 
     def divide_marble(self, start: int):
-        def channel_step(c):
-            if self.channels[c].count >= self.channels[c].max_count:
-                return False
-            if bernoulli(self.channels[c].marble_accept_p):
-                self.channels[c].count += 1
-                return True
-
         loop = None
         if not REVERSE_DIVIDER:
             loop = range(start, NUM_CHANNELS)
@@ -85,16 +98,18 @@ class MMX:
             loop = range(NUM_CHANNELS - start - 1, -1, -1)
         
         for c in loop:
-            if channel_step(c):
-                return
-        
-        self.recycle_transport.add_marbles(1)
+            if self.channels[c].count >= self.channels[c].max_count:
+                continue
+            if bernoulli(self.channels[c].marble_accept_p):
+                self.channels[c].count += 1
+                break
+        else:
+            self.recycle_transport.add_marbles(1)
 
     def simul_step(self):
-        # Return and recycle transports and simul_step()ed and we divide their marbles
+        # Return and recycle transports are simul_step()ed and we divide their marbles
         for marble_start in self.return_transport.simul_step(self.song_i):
             self.divide_marble(marble_start)
-
         for marble_start in self.recycle_transport.simul_step(self.song_i):
             self.divide_marble(marble_start)
 
@@ -134,7 +149,6 @@ def run_sim():
         song = MMXSong.from_file(SONG_PATH)
 
     print(song)
-    print()
 
     #with open("song.txt", "w") as f:
     #    f.write(repr(song))
