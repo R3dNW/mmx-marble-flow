@@ -18,7 +18,7 @@ NUM_MUTE_GROUPS = len(MUTE_GROUPS)
 # -----  SETTINGS TO PLAY WITH -----
 
 # Path to a JSON file describing an MMX song, or None for a random song
-SONG_PATH = None #"song.json"
+SONG_PATH = "song.json"
 
 # How many marbles to try and drop?
 LONG_RUN_MARBLE_GOAL = 1_000_000
@@ -26,10 +26,10 @@ LONG_RUN_MARBLE_GOAL = 1_000_000
 REPORT_COUNT = 20
 
 # Display plots using matplotlib?
-DO_PLOTTING = False
+DO_PLOTTING = True
 
 # How many marbles are in the pipe from the divider to gate?
-MAX_MARBLES_PER_CHANNEL = 40
+MAX_MARBLES_PER_CHANNEL = 32
 
 
 # The probability that a marble going past an empty channel in the divider will fall in
@@ -81,8 +81,8 @@ MARBLE_RECYCLE_SETTINGS = MarbleTransportSettings(
     divider_entry_start=0,      # Assume that the marble lanes put marbles onto the divider at even
     divider_entry_end=0,        # intervals between these 2 divider channels
 
-    reservoir_capacity=4*100,   # How many marbles can be held waiting for the fishstair?
-    reservoir_initial=4*90,     # How many marbles start waiting for the fishstair?
+    reservoir_capacity=4*70,   # How many marbles can be held waiting for the fishstair?
+    reservoir_initial=4*60,     # How many marbles start waiting for the fishstair?
 )
 
 
