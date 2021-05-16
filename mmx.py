@@ -220,6 +220,4 @@ def run_sim():
         plt.show()
 
 if __name__ == "__main__":
-    import cProfile
-    import re
-    cProfile.run("run_sim()", "profiler_data")
+    run_sim()
