@@ -59,7 +59,7 @@ MARBLE_RETURN_SETTINGS = MarbleTransportSettings(
     beats_to_transport=48,      # Because the model doesn't account for time on the divider, this should also be included here
 
     divider_entry_start=4,      # Assume that the marble lanes put marbles onto the divider at even
-    divider_entry_end=38-8,     # intervals between these 2 divider channels
+    divider_entry_end=38-10,    # intervals between these 2 divider channels
 
     reservoir_capacity=40,      # How many marbles can be held waiting for the conveyor?
     reservoir_initial=0,        # How many marbles start waiting for the conveyor?
