@@ -1,2 +1,2 @@
-# wintergatan-mmx
-Simulate the MMX to see if a channel runs dry
+# mmx-marble-flow
+Do a high level simulation of the marble flow in Wintergatan's (https://wintergatan.net/) Marble Machine X to test it's limits.
